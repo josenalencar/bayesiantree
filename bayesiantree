@@ -1,0 +1,69 @@
+#@title
+!pip install matplotlib ipywidgets
+
+import matplotlib.pyplot as plt
+from ipywidgets import interact, Checkbox, FloatText
+import numpy as np
+
+def draw_bayesian_tree(pre_test_probability, sensitivity, specificity, test_positive, hide_results):
+    sensitivity = sensitivity / 100
+    specificity = specificity / 100
+    pre_test_probability = pre_test_probability / 100
+
+    A = pre_test_probability
+    B = 1 - pre_test_probability
+    true_positives = A * sensitivity
+    false_negatives = A * (1 - sensitivity)
+    true_negatives = B * specificity
+    false_positives = B * (1 - specificity)
+
+    plt.figure(figsize=(10, 6))
+
+    plt.text(0.5, 1, 'Probabilidade pré-teste\n' + "{:.0%}".format(pre_test_probability), ha='center', va='center', bbox=dict(boxstyle='round', facecolor='white', edgecolor='black'))
+    if hide_results:
+        plt.text(0.25, 0.5, 'Doentes\n' + "?", ha='center', va='center', bbox=dict(boxstyle='round', facecolor='white', edgecolor='black'))
+        plt.text(0.75, 0.5, 'Saudáveis\n' + "?", ha='center', va='center', bbox=dict(boxstyle='round', facecolor='white', edgecolor='black'))
+        plt.text(0.15, 0, 'Verdadeiros Positivos\n' + "?", ha='center', va='center', bbox=dict(boxstyle='round', facecolor='white', edgecolor='black'))
+        plt.text(0.35, 0, 'Falsos Negativos\n' + "?", ha='center', va='center', bbox=dict(boxstyle='round', facecolor='white', edgecolor='black'))
+        plt.text(0.85, 0, 'Verdadeiros Negativos\n' + "?", ha='center', va='center', bbox=dict(boxstyle='round', facecolor='white', edgecolor='black'))
+        plt.text(0.65, 0, 'Falsos Positivos\n' + "?", ha='center', va='center', bbox=dict(boxstyle='round', facecolor='white', edgecolor='black'))
+    else:
+        plt.text(0.25, 0.5, 'Doentes\n' + "{:.0%}".format(A), ha='center', va='center', bbox=dict(boxstyle='round', facecolor='white', edgecolor='black'))
+        plt.text(0.75, 0.5, 'Saudáveis\n' + "{:.0%}".format(B), ha='center', va='center', bbox=dict(boxstyle='round', facecolor='white', edgecolor='black'))
+        plt.text(0.15, 0, 'Verdadeiros Positivos\n' + "{:.1%}".format(true_positives), ha='center', va='center', bbox=dict(boxstyle='round', facecolor='white', edgecolor='black'))
+        plt.text(0.35, 0, 'Falsos Negativos\n' + "{:.1%}".format(false_negatives), ha='center', va='center', bbox=dict(boxstyle='round', facecolor='white', edgecolor='black'))
+        plt.text(0.85, 0, 'Verdadeiros Negativos\n' + "{:.1%}".format(true_negatives), ha='center', va='center', bbox=dict(boxstyle='round', facecolor='white', edgecolor='black'))
+        plt.text(0.65, 0, 'Falsos Positivos\n' + "{:.1%}".format(false_positives), ha='center', va='center', bbox=dict(boxstyle='round', facecolor='white', edgecolor='black'))
+
+    plt.text(0.10, 0.3, 'Sensibilidade\n' + "{:.0%}".format(sensitivity), ha='center', va='center')
+    plt.text(0.90, 0.3, 'Especificidade\n' + "{:.0%}".format(specificity), ha='center', va='center')
+
+    if hide_results:
+        plt.text(0.9, 0.8, '?', ha='center', va='center')
+    else:
+        if test_positive:
+            post_test_probability = true_positives / (true_positives + false_positives)
+            post_test_label = "Probabilidade pós-teste\n" + "{:.1%}".format(post_test_probability)
+            positive_likelihood_ratio = sensitivity / (1 - specificity)
+            likelihood_ratio_label = "Razão de verossimilhança positiva\n" + "{:.2f}".format(positive_likelihood_ratio)
+        else:
+            post_test_probability = false_negatives / (false_negatives + true_negatives)
+            post_test_label = "Probabilidade pós-teste\n" + "{:.1%}".format(post_test_probability)
+            negative_likelihood_ratio = (1 - sensitivity) / specificity
+            likelihood_ratio_label = "Razão de verossimilhança negativa\n" + "{:.2f}".format(negative_likelihood_ratio)
+        plt.text(0.9, 0.8, post_test_label, ha='center', va='center')
+        plt.text(0.1, 0.8, likelihood_ratio_label, ha='center', va='center')
+
+    # Draw arrows
+    arrow_style = dict(arrowstyle="-|>", linewidth=2.5, color='blue')
+    plt.annotate("", xy=(0.25, 0.6), xytext=(0.5, 0.9), arrowprops=arrow_style)
+    plt.annotate("", xy=(0.75, 0.6), xytext=(0.5, 0.9), arrowprops=arrow_style)
+    plt.annotate("", xy=(0.15, 0.1), xytext=(0.25, 0.4), arrowprops=arrow_style)
+    plt.annotate("", xy=(0.35, 0.1), xytext=(0.25, 0.4), arrowprops=arrow_style)
+    plt.annotate("", xy=(0.65, 0.1), xytext=(0.75, 0.4), arrowprops=arrow_style)
+    plt.annotate("", xy=(0.85, 0.1), xytext=(0.75, 0.4), arrowprops=arrow_style)
+
+    plt.axis('off')
+    plt.show()
+
+interact(draw_bayesian_tree, pre_test_probability=FloatText(value=50, description='Probabilidade Pré-Teste (%)'), sensitivity=FloatText(value=80, description='Sensibilidade (%)'), specificity=FloatText(value=90, description='Especificidade (%)'), test_positive=Checkbox(value=True, description='Teste Positivo'), hide_results=Checkbox(value=False, description='Esconder Resultados'))
